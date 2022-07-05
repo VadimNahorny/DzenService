@@ -8,7 +8,6 @@ import com.example.dzenservice.entity.Tag;
 import com.example.dzenservice.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -107,36 +106,29 @@ public class PostService {
         return idTagList;
     }
 
-    private List<Post> getFollowingsPostsForRecentlyEnteredUser(int countFollowingsPost,
-                                                                List<Post> postListAllFollowing) {
-        List<Post> postList = new ArrayList<>();
-        List<Post> postListForDay = getPostListForDay(postListAllFollowing);
-        List<Post> postListForMonths = getPostListForMonths(postListAllFollowing);
-        SecureRandom random = new SecureRandom();
-        Post post = null;
-        int addedId = 0;
-        int notAddedId = 0;
-        for (int i = 1; i <= countFollowingsPost; ) {
-            if (i == (countFollowingsPost / 2 + 1)) {
-                addedId = 0;
-                notAddedId = 0;
-            }
-            if ((i <= countFollowingsPost / 2) && !postListForDay.isEmpty())
-                post = postListForDay.get(random.nextInt(postListForDay.size()));
-            else if ((i > countFollowingsPost / 2) && !postListForMonths.isEmpty())
-                post = postListForMonths.get(random.nextInt(postListForMonths.size()));
-            if (!postList.contains(post)) {
-                postList.add(post);
-                addedId++;
-                i++;
-            } else notAddedId++;
-            if ((i <= (countFollowingsPost / 2)) && ((notAddedId + addedId) == postListForDay.size()))
-                i = countFollowingsPost / 2 + 1;
-            else if ((i > countFollowingsPost / 2) && ((notAddedId + addedId) == postListForMonths.size()))
-                break;
-        }
-        return postList;
+
+    private List<Long> fromPostToIdPostList(List<Post> postList) {
+        List<Long> idPostList = new ArrayList<>();
+        for (Post post : postList) idPostList.add(post.getId());
+        return idPostList;
     }
+
+    private List<Long> getFollowingsPostsForRecentlyEnteredUser(int countFollowingsPost,
+                                                                List<Post> postListAllFollowing, User user,
+                                                                List <Long>  idPostUserList) {
+        List<Long> idPostFollowingsList = new ArrayList<>();
+        List<Post> postListForDay = getPostListForDay(postListAllFollowing);
+        List<Long> idPostListForDay = fromPostToIdPostList(postListForDay);
+        List<Post> postListForMonths = getPostListForMonths(postListAllFollowing);
+        List<Long> idPostListForMonths = fromPostToIdPostList(postListForMonths);
+        idPostFollowingsList = addIdInPostIdListAndCheck(countFollowingsPost / 2, user,
+                idPostListForDay, idPostFollowingsList, idPostUserList);
+        idPostFollowingsList = addIdInPostIdListAndCheck(countFollowingsPost / 2, user,
+                idPostListForMonths, idPostFollowingsList, idPostUserList);
+
+        return idPostFollowingsList;
+    }
+
 
     private Map<Tag, Long> sortMapByValue(Map<Tag, Long> map) {
         return map.entrySet()
@@ -233,12 +225,11 @@ public class PostService {
         for (Long id : idPostList) {
             if (!postIdListForClient.contains(id) && !idShownPosts.contains(id))
                 postIdListForClient.add(id);
-            System.out.println("addAllPostsFromIdPostList");
         }
         return postIdListForClient;
     }
 
-    private List<Long> getIdPostsListBasedOnPreferenceMap(User user) {
+    private List<Long> getIdPostsListBasedOnPreferenceMap(User user, List <Long>  idPostUserList) {
         Map<Tag, Long> preferenceMap = user.getPreferenceMap();
         Map<Tag, Long> sortedPreferenceMap = sortMapByValue(preferenceMap);
         Set<Tag> tagIdSet = sortedPreferenceMap.keySet();
@@ -257,14 +248,13 @@ public class PostService {
             Set<Long> idPostSet = sortedMap.keySet();
             List<Long> idPostList = new ArrayList<>(idPostSet);
             Collections.reverse(idPostList);
-            System.out.println(idPostList);
             int[] countPost = getCountPostBasedOnTag(listIdMainTag, key);
             if (idPostList.size() <= (countPost[0] + countPost[1]))
                 postIdListForClient = addAllPostsFromIdPostList(idPostList, postIdListForClient,
                         user.getIdShownPosts());
             else {
                 postIdListForClient = formIdPostListForClient(countPost, idPostList,
-                        postIdListForClient, user);
+                        postIdListForClient, user, idPostUserList);
             }
         }
         Collections.shuffle(postIdListForClient);
@@ -273,79 +263,60 @@ public class PostService {
 
 
     private List<Long> formIdPostListForClient(int[] countPost, List<Long> idPostList,
-                                               List<Long> postIdListForClient, User user) {
-        List <Long> addedId = new ArrayList<>();
-        List <Long> notAddedId = new ArrayList<>();
+                                               List<Long> postIdListForClient, User user, List <Long>  idPostUserList) {
+        List<Long> idPostListForFirstPart = idPostList.subList(0, idPostList.size() / 2 + adjustForOddNumber(idPostList.size()));
+        List<Long> idPostListForSecondPart = idPostList.subList(idPostList.size() / 2 + adjustForOddNumber(idPostList.size()),
+                idPostList.size());
+        postIdListForClient = addIdInPostIdListAndCheck(countPost[0], user, idPostListForFirstPart, postIdListForClient, idPostUserList);
+        postIdListForClient = addIdInPostIdListAndCheck(countPost[1], user, idPostListForSecondPart, postIdListForClient, idPostUserList);
+        return postIdListForClient;
+    }
+
+    private List<Long> addIdInPostIdListAndCheck(int countPost, User user, List<Long> idPostList,
+                                                 List<Long> postIdListForClient, List <Long> idPostUserList) {
+        List<Long> idPostListForMethod = new ArrayList<>(idPostList);
+        System.out.println(idPostListForMethod);
         SecureRandom secureRandom = new SecureRandom();
-        int j = 0;
-        for (int i = 1; i <= (countPost[0] + countPost[1]); ) {
-            if ((i == countPost[0] + 1)) {
-                j++;
-                if (j == 1) {
-                    addedId.clear();
-                    notAddedId.clear();
-                }
+        Long idPost;
+        for (int i = 1; i <= countPost; ) {
+            System.out.println("addIdInPostIdListAndCheck");
+            if (idPostListForMethod.isEmpty()) return postIdListForClient;
+            else {
+                idPost = idPostListForMethod.get(secureRandom.nextInt(idPostListForMethod.size()));
             }
-            Long idPost;
-            if (i <= (countPost[0])) {
-                idPost = idPostList.get(secureRandom.nextInt(idPostList.size() / 2 + adjustForOddNumber(idPostList.size())));
-            } else idPost =
-                    idPostList.get(secureRandom.nextInt
-                            ((idPostList.size() / 2 + adjustForOddNumber(idPostList.size())), idPostList.size()));
-            if (!postIdListForClient.contains(idPost) &&
-                    (user.getIdShownPosts() == null || user.getIdShownPosts().isEmpty() ||
-                            !user.getIdShownPosts().contains(idPost))) {
+            if (!idPostUserList.contains(idPost)&&(user.getIdShownPosts() == null || user.getIdShownPosts().isEmpty() ||
+                    !user.getIdShownPosts().contains(idPost))) {
                 postIdListForClient.add(idPost);
-                addedId.add(idPost);
+                idPostListForMethod.remove(idPost);
                 i++;
-            } else if (!notAddedId.contains(idPost)) notAddedId.add(idPost);
-            if ((i <= (countPost[0])) && ((notAddedId.size() + addedId.size()) >= (idPostList.size() / 2 + adjustForOddNumber(idPostList.size()))))
-                i = countPost[0] + 1;
-            else if ((i > (countPost[0])) && ((notAddedId.size() + addedId.size()) >= (idPostList.size() / 2 - adjustForOddNumber(idPostList.size()))))
-                break;
+            } else idPostListForMethod.remove(idPost);
         }
         return postIdListForClient;
     }
 
-    private List<Long> getRandomPostList(User user) {
+    private List<Long> getRandomPostList(User user, List <Long>  idPostUserList) {
         ZonedDateTime time1 = ZonedDateTime.now().minusMonths(1);
         ZonedDateTime time2 = ZonedDateTime.now();
         List<Long> postIdList = postRepository.getPostIdFromPeriod(convertTimeToTimestamp(time1),
                 convertTimeToTimestamp(time2));
         List<Long> postIdListForClient = new ArrayList<>();
-        SecureRandom random = new SecureRandom();
-        int addedId = 0;
-        int notAddedId = 0;
-        for (int i = 1; i <= 15;) {
-            Long postId = postIdList.get(random.nextInt(postIdList.size()));
-            if (!postIdListForClient.contains(postId) &&
-                    !user.getIdShownPosts().contains(postId)) {
-                postIdListForClient.add(postId);
-                addedId++;
-                i++;
-                System.out.println("getRandomPostList");
-            } else notAddedId++;
-            if ((i < 15) && ((notAddedId + addedId) == postIdList.size()))
-                break;
-        }
+        postIdListForClient = addIdInPostIdListAndCheck(15, user, postIdList, postIdListForClient, idPostUserList);
         return postIdListForClient;
     }
-
 
     public List<Post> getPostsListForRecentlyEnteredUser(User user) {
         User userFromBase = userRepository.getReferenceById(user.getId());
         userFromBase.getIdShownPosts().clear();
+        List <Long>  idPostUserList = postRepository.getListPostIdByUserId(userFromBase.getId());
         List<Post> postList = getPostListWithTime(getIdPostListAllFollowing(userFromBase));
         int countFollowingsPost = getCountFollowingsPost(userFromBase.getFollowing().size());
-        List<Post> followingsPosts = getFollowingsPostsForRecentlyEnteredUser(countFollowingsPost,
-                postList);
-        List<Long> idPostListForClient = new ArrayList<>();
-        for (Post post : followingsPosts) idPostListForClient.add(post.getId());
+        List<Long> idPostListForClient = getFollowingsPostsForRecentlyEnteredUser(countFollowingsPost,
+                postList, userFromBase, idPostUserList);
         userFromBase.getIdShownPosts().addAll(idPostListForClient);
-        List<Long> idPostsListBasedOnPreferenceMap = getIdPostsListBasedOnPreferenceMap(userFromBase);
+        List<Long> idPostsListBasedOnPreferenceMap = getIdPostsListBasedOnPreferenceMap(userFromBase, idPostUserList);
         idPostListForClient.addAll(idPostsListBasedOnPreferenceMap);
         userFromBase.getIdShownPosts().addAll(idPostsListBasedOnPreferenceMap);
-        List <Long> randomIdPostList = getRandomPostList(userFromBase);
+        List<Long> randomIdPostList = getRandomPostList(userFromBase, idPostUserList);
         idPostListForClient.addAll(randomIdPostList);
         userFromBase.getIdShownPosts().addAll(randomIdPostList);
         userRepository.save(userFromBase);
@@ -356,10 +327,11 @@ public class PostService {
 
     public List<Post> getAdditionalPostList(User user) {
         User userFromBase = userRepository.getReferenceById(user.getId());
-        List<Long> idPostsListBasedOnPreferenceMap = getIdPostsListBasedOnPreferenceMap(userFromBase);
+        List <Long>  idPostUserList = postRepository.getListPostIdByUserId(userFromBase.getId());
+        List<Long> idPostsListBasedOnPreferenceMap = getIdPostsListBasedOnPreferenceMap(userFromBase, idPostUserList);
         List<Long> idPostListForClient = new ArrayList<>(idPostsListBasedOnPreferenceMap);
         userFromBase.getIdShownPosts().addAll(idPostsListBasedOnPreferenceMap);
-        List <Long> randomIdPostList = getRandomPostList(userFromBase);
+        List<Long> randomIdPostList = getRandomPostList(userFromBase, idPostUserList);
         idPostListForClient.addAll(randomIdPostList);
         userFromBase.getIdShownPosts().addAll(randomIdPostList);
         userRepository.save(userFromBase);
@@ -367,7 +339,6 @@ public class PostService {
         for (Long postId : idPostListForClient) postListForClient.add(postRepository.getReferenceById(postId));
         return postListForClient;
     }
-
 
     public void clearIdShownPosts(User user) {
         User userFromBase = userRepository.getReferenceById(user.getId());

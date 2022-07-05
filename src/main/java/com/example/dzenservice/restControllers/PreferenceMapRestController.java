@@ -1,5 +1,4 @@
 package com.example.dzenservice.restControllers;
-
 import com.example.dzenservice.dto.UserPostDTO;
 import com.example.dzenservice.dto.UserPostDTOMapper;
 import com.example.dzenservice.entity.Post;
@@ -8,7 +7,6 @@ import com.example.dzenservice.service.PostService;
 import com.example.dzenservice.service.PreferenceMapBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController

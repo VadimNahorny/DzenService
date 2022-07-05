@@ -20,8 +20,5 @@ public class Comment {
     @ManyToOne
     private User user;
 
-    public String getDateTime(){
-        DateTimeFormatter pattern = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm");
-        return dateTime.format(pattern);
-    }
+
 }

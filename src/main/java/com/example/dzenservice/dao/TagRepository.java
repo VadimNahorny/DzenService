@@ -1,6 +1,4 @@
 package com.example.dzenservice.dao;
-
-import com.example.dzenservice.entity.Post;
 import com.example.dzenservice.entity.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 

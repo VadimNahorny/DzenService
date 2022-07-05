@@ -24,11 +24,10 @@ public class PreferenceMapBuilder {
     @Autowired
     TagRepository tagRepository;
 
-
-
     public void addPointsPerLike(Post post, User user) {
         addPoints(post, user, 10L);
     }
+
     public void addPointsPerSeeing(Post post, User user) {
         addPoints(post, user, 1L);
     }
@@ -94,18 +93,18 @@ public class PreferenceMapBuilder {
         return tagCount;
     }
 
-      private void addPointToUserPreferenceMapPerAdditionFollowing (User follower, List<Long> listTadId,
+      private void addPointToUserPreferenceMapPerAdditionFollowing (User follower, List<Long> listTagId,
                                                                     Map<Long, Long> sortedMap) {
         User userFollowerFromBase = userRepository.getReferenceById(follower.getId());
         long points = 15;
-        for (int i = 0; i < listTadId.size(); i++) {
-            Tag tag = tagRepository.getReferenceById(listTadId.get(i));
+        for (int i = 0; i < listTagId.size(); i++) {
+            Tag tag = tagRepository.getReferenceById(listTagId.get(i));
             if (userFollowerFromBase.getPreferenceMap().containsKey(tag)) {
                 Long allPoints = userFollowerFromBase.getPreferenceMap().get(tag) + points;
                 userFollowerFromBase.getPreferenceMap().put(tag, allPoints);
             } else userFollowerFromBase.getPreferenceMap().put(tag, points);
-            if (i != (listTadId.size() - 1) &&
-                    (sortedMap.get(listTadId.get(i + 1)) != sortedMap.get(listTadId.get(i)))) {
+            if (i != (listTagId.size() - 1) &&
+                    (sortedMap.get(listTagId.get(i + 1)) != sortedMap.get(listTagId.get(i)))) {
                 if (i >= 2) break;
                 else points = points - 2;
             }

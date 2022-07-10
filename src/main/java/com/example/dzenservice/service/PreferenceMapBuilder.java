@@ -46,8 +46,8 @@ public class PreferenceMapBuilder {
 
     private void addPoints(Post post, User user, Long addPoints) {
         if (postRepository.existsById(user.getId()) && userRepository.existsById(user.getId())) {
-            Post postFromBase = postRepository.getReferenceById(post.getId());
-            User userFromBase = userRepository.getReferenceById(user.getId());
+            Post postFromBase = postRepository.getOne(post.getId());
+            User userFromBase = userRepository.getOne(user.getId());
             List<Tag> tagList = postFromBase.getTagList();
             for (Tag tag : tagList) {
                 if (userFromBase.getPreferenceMap().containsKey(tag)) {
@@ -95,10 +95,10 @@ public class PreferenceMapBuilder {
 
       private void addPointToUserPreferenceMapPerAdditionFollowing (User follower, List<Long> listTagId,
                                                                     Map<Long, Long> sortedMap) {
-        User userFollowerFromBase = userRepository.getReferenceById(follower.getId());
+        User userFollowerFromBase = userRepository.getOne(follower.getId());
         long points = 15;
         for (int i = 0; i < listTagId.size(); i++) {
-            Tag tag = tagRepository.getReferenceById(listTagId.get(i));
+            Tag tag = tagRepository.getOne(listTagId.get(i));
             if (userFollowerFromBase.getPreferenceMap().containsKey(tag)) {
                 Long allPoints = userFollowerFromBase.getPreferenceMap().get(tag) + points;
                 userFollowerFromBase.getPreferenceMap().put(tag, allPoints);

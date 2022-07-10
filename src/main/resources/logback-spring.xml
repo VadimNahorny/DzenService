@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="pattern" value="%date{dd:MM:yyyy HH:mm:ss.SSS} %-5p %logger{36}
+%X{akkaSource} [%file:%line] - %m%n"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>>${pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="PreferenceMapRestController" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/PreferenceMapRestController.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${catalina.base}/logs/worker-%d{yyyy-MM-dd_HH}.log</fileNamePattern>
+            <maxHistory>360</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${pattern}</pattern>
+        </encoder>
+    </appender>
+
+
+    <logger name="com.example.dzenservice.controllers" level="INFO" additivity="true">
+        <appender-ref ref="PreferenceMapRestController"/>
+    </logger>
+
+    <root>
+        <level value="INFO"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

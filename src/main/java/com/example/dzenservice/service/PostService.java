@@ -275,11 +275,9 @@ public class PostService {
     private List<Long> addIdInPostIdListAndCheck(int countPost, User user, List<Long> idPostList,
                                                  List<Long> postIdListForClient, List <Long> idPostUserList) {
         List<Long> idPostListForMethod = new ArrayList<>(idPostList);
-        System.out.println(idPostListForMethod);
         SecureRandom secureRandom = new SecureRandom();
         Long idPost;
         for (int i = 1; i <= countPost; ) {
-            System.out.println("addIdInPostIdListAndCheck");
             if (idPostListForMethod.isEmpty()) return postIdListForClient;
             else {
                 idPost = idPostListForMethod.get(secureRandom.nextInt(idPostListForMethod.size()));
@@ -305,7 +303,7 @@ public class PostService {
     }
 
     public List<Post> getPostsListForRecentlyEnteredUser(User user) {
-        User userFromBase = userRepository.getReferenceById(user.getId());
+        User userFromBase = userRepository.getOne(user.getId());
         userFromBase.getIdShownPosts().clear();
         List <Long>  idPostUserList = postRepository.getListPostIdByUserId(userFromBase.getId());
         List<Post> postList = getPostListWithTime(getIdPostListAllFollowing(userFromBase));
@@ -321,12 +319,12 @@ public class PostService {
         userFromBase.getIdShownPosts().addAll(randomIdPostList);
         userRepository.save(userFromBase);
         List<Post> postListForClient = new ArrayList<>();
-        for (Long postId : idPostListForClient) postListForClient.add(postRepository.getReferenceById(postId));
+        for (Long postId : idPostListForClient) postListForClient.add(postRepository.getOne(postId));
         return postListForClient;
     }
 
     public List<Post> getAdditionalPostList(User user) {
-        User userFromBase = userRepository.getReferenceById(user.getId());
+        User userFromBase = userRepository.getOne(user.getId());
         List <Long>  idPostUserList = postRepository.getListPostIdByUserId(userFromBase.getId());
         List<Long> idPostsListBasedOnPreferenceMap = getIdPostsListBasedOnPreferenceMap(userFromBase, idPostUserList);
         List<Long> idPostListForClient = new ArrayList<>(idPostsListBasedOnPreferenceMap);
@@ -336,12 +334,12 @@ public class PostService {
         userFromBase.getIdShownPosts().addAll(randomIdPostList);
         userRepository.save(userFromBase);
         List<Post> postListForClient = new ArrayList<>();
-        for (Long postId : idPostListForClient) postListForClient.add(postRepository.getReferenceById(postId));
+        for (Long postId : idPostListForClient) postListForClient.add(postRepository.getOne(postId));
         return postListForClient;
     }
 
     public void clearIdShownPosts(User user) {
-        User userFromBase = userRepository.getReferenceById(user.getId());
+        User userFromBase = userRepository.getOne(user.getId());
         userFromBase.getIdShownPosts().clear();
         userRepository.save(userFromBase);
     }

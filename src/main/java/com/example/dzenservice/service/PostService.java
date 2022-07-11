@@ -339,7 +339,8 @@ public class PostService {
     }
 
     public void clearIdShownPosts(User user) {
-        User userFromBase = userRepository.getOne(user.getId());
+        Optional<User> userOptionalFromBase = userRepository.findById(user.getId());
+        User userFromBase = userOptionalFromBase.get();
         userFromBase.getIdShownPosts().clear();
         userRepository.save(userFromBase);
     }

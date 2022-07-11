@@ -277,13 +277,13 @@ public class PostService {
         List<Long> idPostListForMethod = new ArrayList<>(idPostList);
         SecureRandom secureRandom = new SecureRandom();
         Long idPost;
-        for (int i = 1; i <= countPost; ) {
+        for (int i = 1; i <= countPost;) {
             if (idPostListForMethod.isEmpty()) return postIdListForClient;
             else {
                 idPost = idPostListForMethod.get(secureRandom.nextInt(idPostListForMethod.size()));
             }
-            if (!idPostUserList.contains(idPost)&&(user.getIdShownPosts() == null || user.getIdShownPosts().isEmpty() ||
-                    !user.getIdShownPosts().contains(idPost))) {
+            if (!idPostUserList.contains(idPost)&&!user.getIdShownPosts().contains(idPost)&&
+                    !postIdListForClient.contains(idPost)) {
                 postIdListForClient.add(idPost);
                 idPostListForMethod.remove(idPost);
                 i++;

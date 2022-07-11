@@ -70,10 +70,10 @@ public class PreferenceMapBuilder {
         Set<Long> tagIdSet = sortedMap.keySet();
         List<Long> listTagId = new ArrayList<>(tagIdSet);
         Collections.reverse(listTagId);
-        addPointToUserPreferenceMapPerAdditionFollowing (follower, listTagId, sortedMap);
+        addPointToUserPreferenceMapPerAdditionFollowing(follower, listTagId, sortedMap);
     }
 
-    private Map <Long, Long> sortMapByValue (Map <Long, Long> map) {
+    private Map<Long, Long> sortMapByValue(Map<Long, Long> map) {
         return map.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue())
@@ -84,7 +84,7 @@ public class PreferenceMapBuilder {
                                 LinkedHashMap::new));
     }
 
-    private Map <Long, Long> getTagCountMap (List<Long>  tagId) {
+    private Map<Long, Long> getTagCountMap(List<Long> tagId) {
         Map<Long, Long> tagCount = new HashMap<>();
         for (Long id : tagId) {
             if (!tagCount.containsKey(id)) tagCount.put(id, 1L);
@@ -93,8 +93,8 @@ public class PreferenceMapBuilder {
         return tagCount;
     }
 
-      private void addPointToUserPreferenceMapPerAdditionFollowing (User follower, List<Long> listTagId,
-                                                                    Map<Long, Long> sortedMap) {
+    private void addPointToUserPreferenceMapPerAdditionFollowing(User follower, List<Long> listTagId,
+                                                                 Map<Long, Long> sortedMap) {
         User userFollowerFromBase = userRepository.getOne(follower.getId());
         long points = 15;
         for (int i = 0; i < listTagId.size(); i++) {

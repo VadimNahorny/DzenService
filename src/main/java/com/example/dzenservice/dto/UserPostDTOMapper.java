@@ -1,12 +1,10 @@
 package com.example.dzenservice.dto;
-
 import com.example.dzenservice.entity.Post;
 import com.example.dzenservice.entity.User;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserPostDTOMapper {
-
 
     public User mapperDTOtoUser(UserPostDTO userPostDTO) {
         User user = new User();
